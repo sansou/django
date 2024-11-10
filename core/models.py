@@ -1,16 +1,29 @@
 from django.db import models
+from django.utils import timezone
+from django.forms import ValidationError
 
 # Create your models here.
 class Video(models.Model):
-  title = models.CharField(max_length=100, unique=True)
-  description = models.TextField()
-  thumbnail = models.ImageField(upload_to='media/thumbnails/')
-  video = models.FileField(upload_to='media/videos/')
+  title = models.CharField(verbose_name='Titulo', max_length=100, unique=True)
+  description = models.TextField(verbose_name='Descrição')
+  thumbnail = models.ImageField(upload_to='media/thumbnails/', verbose_name='Miniatura')
+  video = models.FileField(upload_to='media/videos/', verbose_name='Vídeo')
   slug = models.SlugField(max_length=100, unique=True)
-  published_at = models.DateTimeField()
-  is_published = models.BooleanField(default=False)
-  num_likes = models.IntegerField(default=0)
-  num_views = models.IntegerField(default=0)
+  published_at = models.DateTimeField(verbose_name='Publicado em', editable=False, null=True)
+  is_published = models.BooleanField(default=False, verbose_name='Está publicado')
+  num_likes = models.IntegerField(default=0, verbose_name='Número de curtidas', editable=False)
+  num_views = models.IntegerField(default=0, verbose_name='Número de visualizações', editable=False)
+  tags = models.ManyToManyField('Tag', verbose_name="Tags")
+
+  def save(self, *args, **kwargs):
+    if self.is_published and not self.published_at:
+      self.published_at = timezone.now()
+    return super().save(*args, **kwargs)
+  
+  def clean(self) -> None:
+    if self.is_published and not self.thumbnail and not self.video:
+      raise ValidationError('Para publicar um vídeo, é necessário informar uma miniatura ou um vídeo.')
+    return super().clean()
   
   class Meta:
     verbose_name = 'Vídeo'
@@ -18,3 +31,9 @@ class Video(models.Model):
 
   def __str__(self) -> str:
     return self.title
+  
+class Tag(models.Model):
+  name = models.CharField(max_length=50, unique=True, verbose_name='Nome')
+
+  def __str__(self) -> str:
+    return self.name

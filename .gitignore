@@ -1,1 +1,4 @@
 media/*
+.history
+.venv/
+db.sqlite3

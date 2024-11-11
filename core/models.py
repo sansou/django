@@ -6,14 +6,15 @@ from django.forms import ValidationError
 class Video(models.Model):
   title = models.CharField(verbose_name='Titulo', max_length=100, unique=True)
   description = models.TextField(verbose_name='Descrição')
-  thumbnail = models.ImageField(upload_to='media/thumbnails/', verbose_name='Miniatura')
-  video = models.FileField(upload_to='media/videos/', verbose_name='Vídeo')
+  thumbnail = models.ImageField(upload_to='media/thumbnails/', verbose_name='Miniatura', null=True)
+  video = models.FileField(upload_to='media/videos/', verbose_name='Vídeo', null=True)
   slug = models.SlugField(max_length=100, unique=True)
   published_at = models.DateTimeField(verbose_name='Publicado em', editable=False, null=True)
-  is_published = models.BooleanField(default=False, verbose_name='Está publicado')
+  is_published = models.BooleanField(default=False, verbose_name='Está publicado?')
   num_likes = models.IntegerField(default=0, verbose_name='Número de curtidas', editable=False)
   num_views = models.IntegerField(default=0, verbose_name='Número de visualizações', editable=False)
   tags = models.ManyToManyField('Tag', verbose_name="Tags")
+  author = models.ForeignKey('auth.User', on_delete=models.PROTECT, verbose_name='Autor', editable=False)
 
   def save(self, *args, **kwargs):
     if self.is_published and not self.published_at:
